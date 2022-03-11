@@ -3,6 +3,7 @@ package codeanalysis
 import (
 	"encoding/json"
 	"fmt"
+	"git.oschina.net/jscode/go-package-plantuml/util"
 	log "github.com/sirupsen/logrus"
 	"go/ast"
 	"go/parser"
@@ -346,13 +347,19 @@ func (this *analysisTool) visitTypeSpec(typeSpec *ast.TypeSpec) {
 }
 
 func (this *analysisTool) filepathToPackagePath(filepath string) string {
-
 	filepath = path.Dir(filepath)
 
 	if this.config.VendorDir != "" {
 		if strings.HasPrefix(filepath, this.config.VendorDir) {
 			packagePath := strings.TrimPrefix(filepath, this.config.VendorDir)
 			packagePath = strings.TrimPrefix(packagePath, "/")
+			if packagePath == "" {
+				if util.IsDir(filepath) {
+					packagePath = path.Base(filepath)
+				} else {
+					packagePath = path.Base(path.Dir(filepath))
+				}
+			}
 			return packagePath
 		}
 	}
@@ -361,6 +368,13 @@ func (this *analysisTool) filepathToPackagePath(filepath string) string {
 		if strings.HasPrefix(filepath, this.config.CodeDir) {
 			packagePath := strings.TrimPrefix(filepath, this.config.CodeDir)
 			packagePath = strings.TrimPrefix(packagePath, "/")
+			if packagePath == "" {
+				if util.IsDir(filepath) {
+					packagePath = path.Base(filepath)
+				} else {
+					packagePath = path.Base(path.Dir(filepath))
+				}
+			}
 			return packagePath
 		}
 	}
@@ -1020,6 +1034,10 @@ func (this *analysisTool) findAliasByPackagePath(packagePath string) string {
 		if PathExists(absPath) {
 			result = findGoPackageNameInDirPath(absPath)
 		}
+	}
+
+	if result == "" {
+		result = path.Base(packagePath)
 	}
 
 	log.Debugf("packagepath=%s, alias=%s\n", packagePath, result)

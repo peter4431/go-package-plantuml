@@ -7,7 +7,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"os"
 	"path"
-	"strings"
 )
 
 func main() {
@@ -36,10 +35,15 @@ func main() {
 		panic("代码目录不能为空")
 	}
 
+	if !path.IsAbs(opts.CodeDir) {
+		wd, _ := os.Getwd()
+		opts.CodeDir = path.Join(wd, opts.CodeDir)
+	}
+
 	var newDir string
 	var newIgnoreDirs []string
 	for _, dir := range opts.IgnoreDirs {
-		if !strings.HasPrefix(dir, opts.CodeDir) {
+		if !path.IsAbs(dir) {
 			newDir = path.Join(opts.CodeDir, dir)
 		} else {
 			newDir = dir
